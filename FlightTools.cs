@@ -30,8 +30,10 @@ public class FlightTools(HttpClient httpClient)
             var lon = s[5].GetDouble();
             var alt = s[7].GetDouble();
             var spd = s[9].GetDouble();
+            var heading = s[10].GetDouble();
+            var verticalRate = s[11].GetDouble();
 
-            return $"{callsign} | lat={lat:F2} lon={lon:F2} alt={alt:F0}m spd={spd:F0}m/s";
+            return $"{callsign} | lat={lat:F2} lon={lon:F2} alt={alt:F0}m spd={spd:F0}m/s heading={heading:F0}° vrate={verticalRate:F1}m/s";
         }
         catch (HttpRequestException ex)
         {
@@ -71,12 +73,13 @@ public class FlightTools(HttpClient httpClient)
             for (int i = 0; i < cap; i++)
             {
                 var s = states[i];
+                var icao24 = s[0].GetString() ?? "unknown";
                 var callsign = s[1].GetString()?.Trim() ?? "unknown";
                 var lat = s[6].GetDouble();
                 var lon = s[5].GetDouble();
                 var alt = s[7].GetDouble();
                 var spd = s[9].GetDouble();
-                lines.AppendLine($"{callsign} | lat={lat:F2} lon={lon:F2} alt={alt:F0}m spd={spd:F0}m/s");
+                lines.AppendLine($"{callsign} ({icao24}) | lat={lat:F2} lon={lon:F2} alt={alt:F0}m spd={spd:F0}m/s");
             }
 
             return lines.ToString();
