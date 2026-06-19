@@ -26,14 +26,14 @@ public class FlightTools(HttpClient httpClient)
 
             var s = states[0];
             var callsign = s[1].GetString()?.Trim() ?? "unknown";
-            var lat = s[6].GetDouble();
-            var lon = s[5].GetDouble();
-            var alt = s[7].GetDouble();
-            var spd = s[9].GetDouble();
-            var heading = s[10].GetDouble();
-            var verticalRate = s[11].GetDouble();
+            var lat = s[6].ValueKind == JsonValueKind.Null ? (double?)null : s[6].GetDouble();
+            var lon = s[5].ValueKind == JsonValueKind.Null ? (double?)null : s[5].GetDouble();
+            var alt = s[7].ValueKind == JsonValueKind.Null ? (double?)null : s[7].GetDouble();
+            var spd = s[9].ValueKind == JsonValueKind.Null ? (double?)null : s[9].GetDouble();
+            var heading = s[10].ValueKind == JsonValueKind.Null ? (double?)null : s[10].GetDouble();
+            var verticalRate = s[11].ValueKind == JsonValueKind.Null ? (double?)null : s[11].GetDouble();
 
-            return $"{callsign} | lat={lat:F2} lon={lon:F2} alt={alt:F0}m spd={spd:F0}m/s heading={heading:F0}° vrate={verticalRate:F1}m/s";
+            return $"{callsign} | lat={lat?.ToString("F2") ?? "?"} lon={lon?.ToString("F2") ?? "?"} alt={alt?.ToString("F0") ?? "?"}m spd={spd?.ToString("F0") ?? "?"}m/s heading={heading?.ToString("F0") ?? "?"}° vrate={verticalRate?.ToString("F1") ?? "?"}m/s";
         }
         catch (HttpRequestException ex)
         {
@@ -75,11 +75,15 @@ public class FlightTools(HttpClient httpClient)
                 var s = states[i];
                 var icao24 = s[0].GetString() ?? "unknown";
                 var callsign = s[1].GetString()?.Trim() ?? "unknown";
-                var lat = s[6].GetDouble();
-                var lon = s[5].GetDouble();
-                var alt = s[7].GetDouble();
-                var spd = s[9].GetDouble();
-                lines.AppendLine($"{callsign} ({icao24}) | lat={lat:F2} lon={lon:F2} alt={alt:F0}m spd={spd:F0}m/s");
+                var lat = s[6].ValueKind == JsonValueKind.Null ? (double?)null : s[6].GetDouble();
+                var lon = s[5].ValueKind == JsonValueKind.Null ? (double?)null : s[5].GetDouble();
+                var alt = s[7].ValueKind == JsonValueKind.Null ? (double?)null : s[7].GetDouble();
+                var spd = s[9].ValueKind == JsonValueKind.Null ? (double?)null : s[9].GetDouble();
+                var latStr = lat.HasValue ? $"{lat:F2}" : "?";
+                var lonStr = lon.HasValue ? $"{lon:F2}" : "?";
+                var altStr = alt.HasValue ? $"{alt:F0}m" : "?";
+                var spdStr = spd.HasValue ? $"{spd:F0}m/s" : "?";
+                lines.AppendLine($"{callsign} ({icao24}) | lat={latStr} lon={lonStr} alt={altStr} spd={spdStr}");
             }
 
             return lines.ToString();
