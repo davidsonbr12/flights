@@ -12,27 +12,43 @@ Returns the current status of a specific aircraft by its ICAO 24-bit hex address
 **Output:** Callsign, position (lat/lon), altitude, speed, heading, and vertical rate.
 
 ### `SearchFlightsByArea`
-Returns all airborne flights within a geographic bounding box (up to 10 results).
+Returns all airborne flights within a radius of a geographic center point (up to 10 results).
 
-**Inputs:** `minLat`, `minLon`, `maxLat`, `maxLon`
+**Inputs:** `centerLat`, `centerLon`, `radiusKm`
 
 **Output:** Callsign, ICAO24, position, altitude, and speed for each flight.
 
-## Requirements
+## Running with Docker
 
-- [.NET 10 SDK](https://dotnet.microsoft.com/download)
+```bash
+docker build -t flights-mcp .
+docker run -i --rm flights-mcp
+```
 
-## Running
+## Running without Docker
+
+**Requirements:** [.NET 10 SDK](https://dotnet.microsoft.com/download)
 
 ```bash
 dotnet run
 ```
 
-The server communicates over stdio and is intended to be launched by an MCP client (e.g. Claude Code).
-
 ## Claude Code Integration
 
-Add to your `.claude/settings.json`:
+**Docker (recommended):**
+
+```json
+{
+  "mcpServers": {
+    "flights": {
+      "command": "docker",
+      "args": ["run", "-i", "--rm", "flights-mcp"]
+    }
+  }
+}
+```
+
+**Without Docker:**
 
 ```json
 {
