@@ -45,16 +45,29 @@ public class FlightTools(HttpClient httpClient)
         }
     }
     
-    [McpServerTool, Description("Searches a geographic bounding box and returns all airborne flights in that area.")]
+    [McpServerTool, Description("Searches for airborne flights within a radius of a geographic center point.")]
     public async Task<string> SearchFlightsByArea(
-        [Description("Minimum latitude of the search area")] double minLat,
-        [Description("Minimum longitude of the search area")] double minLon,
-        [Description("Maximum latitude of the search area")] double maxLat,
-        [Description("Maximum longitude of the search area")] double maxLon)
+        [Description("Latitude of the center point (-90 to 90)")] double centerLat,
+        [Description("Longitude of the center point (-180 to 180)")] double centerLon,
+        [Description("Search radius in kilometers (must be > 0)")] double radiusKm)
     {
+        if (centerLat < -90 || centerLat > 90)
+            return "Invalid centerLat: must be between -90 and 90.";
+        if (centerLon < -180 || centerLon > 180)
+            return "Invalid centerLon: must be between -180 and 180.";
+        if (radiusKm <= 0)
+            return "Invalid radiusKm: must be greater than 0.";
+
+        var deltaLat = radiusKm / 111.32;
+        var deltaLon = radiusKm / (111.32 * Math.Cos(centerLat * Math.PI / 180));
+        var minLat = Math.Max(-90, centerLat - deltaLat);
+        var maxLat = Math.Min(90, centerLat + deltaLat);
+        var minLon = Math.Max(-180, centerLon - deltaLon);
+        var maxLon = Math.Min(180, centerLon + deltaLon);
+
         try
         {
-            var url = $"https://opensky-network.org/api/states/all?lamin={minLat}&lomin={minLon}&lamax={maxLat}&lomax={maxLon}";
+            var url = FormattableString.Invariant($"https://opensky-network.org/api/states/all?lamin={minLat}&lomin={minLon}&lamax={maxLat}&lomax={maxLon}");
             var response = await httpClient.GetAsync(url);
             response.EnsureSuccessStatusCode();
 
