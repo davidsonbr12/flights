@@ -42,4 +42,52 @@ public class FlightTools(HttpClient httpClient)
             return $"Unexpected error: {ex.Message}";
         }
     }
+    
+    [McpServerTool, Description("Searches a geographic bounding box and returns all airborne flights in that area.")]
+    public async Task<string> SearchFlightsByArea(
+        [Description("Minimum latitude of the search area")] double minLat,
+        [Description("Minimum longitude of the search area")] double minLon,
+        [Description("Maximum latitude of the search area")] double maxLat,
+        [Description("Maximum longitude of the search area")] double maxLon)
+    {
+        try
+        {
+            var url = $"https://opensky-network.org/api/states/all?lamin={minLat}&lomin={minLon}&lamax={maxLat}&lomax={maxLon}";
+            var response = await httpClient.GetAsync(url);
+            response.EnsureSuccessStatusCode();
+
+            var json = await response.Content.ReadAsStringAsync();
+            using var doc = JsonDocument.Parse(json);
+            var states = doc.RootElement.GetProperty("states");
+
+            if (states.ValueKind == JsonValueKind.Null || states.GetArrayLength() == 0)
+                return "No flights found in that area.";
+
+            var total = states.GetArrayLength();
+            var cap = Math.Min(total, 10);
+            var lines = new System.Text.StringBuilder();
+            lines.AppendLine($"Showing {cap} of {total} flights:");
+
+            for (int i = 0; i < cap; i++)
+            {
+                var s = states[i];
+                var callsign = s[1].GetString()?.Trim() ?? "unknown";
+                var lat = s[6].GetDouble();
+                var lon = s[5].GetDouble();
+                var alt = s[7].GetDouble();
+                var spd = s[9].GetDouble();
+                lines.AppendLine($"{callsign} | lat={lat:F2} lon={lon:F2} alt={alt:F0}m spd={spd:F0}m/s");
+            }
+
+            return lines.ToString();
+        }
+        catch (HttpRequestException ex)
+        {
+            return $"Failed to reach OpenSky API: {ex.StatusCode}";
+        }
+        catch (Exception ex)
+        {
+            return $"Unexpected error: {ex.Message}";
+        }
+    }
 }
